@@ -23,7 +23,7 @@ import { getUserEnrolledCourseIds, enrollInCourse } from './firebase/firestoreSe
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
-  const [enrolledIds, setEnrolledIds] = useState([2, 4, 5]);
+  const [enrolledIds, setEnrolledIds] = useState([]);
   const [toast, setToast] = useState(null);
 
   // Subscribe to Firebase / Local Auth changes

@@ -74,7 +74,7 @@ export const enrollInCourse = async (userId, courseId) => {
 
   // Always keep local state up to date
   const enrollments = getLocalData(LOCAL_ENROLLMENTS_KEY, {});
-  const userList = enrollments[userId] || [2, 4, 5];
+  const userList = enrollments[userId] || [];
   if (!userList.includes(numericId)) {
     userList.push(numericId);
     enrollments[userId] = userList;
@@ -98,7 +98,7 @@ export const getUserEnrolledCourseIds = async (userId) => {
     }
   }
   const enrollments = getLocalData(LOCAL_ENROLLMENTS_KEY, {});
-  return enrollments[userId] || [2, 4, 5];
+  return enrollments[userId] || [];
 };
 
 /**
