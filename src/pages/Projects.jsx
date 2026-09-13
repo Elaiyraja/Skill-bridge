@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { Icon } from '../components/common/Icon';
 import { Badge, Tag, Modal } from '../components/common/UIComponents';
 import { INITIAL_PROJECTS } from '../data/projects';
-import { submitProposal } from '../firebase/firestoreService';
+import {
+  submitProposal,
+  saveProjectBuildRequest,
+  createClientToAdminMailLink,
+  ADMIN_EMAIL
+} from '../firebase/firestoreService';
 
 export const ProjectsPage = ({ setPage, user, showToast }) => {
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
@@ -16,7 +21,7 @@ export const ProjectsPage = ({ setPage, user, showToast }) => {
   const [coverLetter, setCoverLetter] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Post project modal state
+  // Post project modal state (for micro-tasks)
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
     title: "",
@@ -27,7 +32,22 @@ export const ProjectsPage = ({ setPage, user, showToast }) => {
     skills: "HTML, CSS"
   });
 
-  const categories = ["All", "Website", "Graphic Design", "Data Entry", "Content Writing", "Python"];
+  // Client "Ask to build a project" modal state
+  const [buildRequestModalOpen, setBuildRequestModalOpen] = useState(false);
+  const [buildSubmitting, setBuildSubmitting] = useState(false);
+  const [buildConfirmation, setBuildConfirmation] = useState(null);
+  const [buildForm, setBuildForm] = useState({
+    clientName: user?.name || "",
+    clientEmail: user?.email || "",
+    clientPhone: "",
+    title: "",
+    category: "Website",
+    budget: "₹3,000–₹8,000",
+    deadline: "10 days",
+    description: "",
+  });
+
+  const categories = ["All", "Website", "Graphic Design", "Data Entry", "Content Writing", "Python", "Mobile App", "Custom Software"];
 
   const filtered = projects.filter((p) => {
     const matchS =
@@ -112,6 +132,37 @@ export const ProjectsPage = ({ setPage, user, showToast }) => {
     showToast("🎉 Your project has been posted for SkillBridge learners!");
   };
 
+  const handleBuildRequestSubmit = async (e) => {
+    e.preventDefault();
+    if (!buildForm.title || !buildForm.clientEmail || !buildForm.description) {
+      showToast("Please provide your project title, email, and description.");
+      return;
+    }
+
+    setBuildSubmitting(true);
+    try {
+      const record = await saveProjectBuildRequest({
+        clientName: buildForm.clientName || user?.name || "Prospective Client",
+        clientEmail: buildForm.clientEmail || user?.email || "",
+        clientPhone: buildForm.clientPhone || "",
+        title: buildForm.title,
+        category: buildForm.category,
+        budget: buildForm.budget,
+        deadline: buildForm.deadline,
+        description: buildForm.description,
+        userId: user?.uid || "guest_client"
+      });
+
+      setBuildConfirmation(record);
+      setBuildRequestModalOpen(false);
+      showToast("🚀 Project request submitted! Check email options below.");
+    } catch (err) {
+      console.error(err);
+      showToast("Error saving project request. Please try again.");
+    }
+    setBuildSubmitting(false);
+  };
+
   return (
     <div>
       {/* Header Banner */}
@@ -126,33 +177,92 @@ export const ProjectsPage = ({ setPage, user, showToast }) => {
       </div>
 
       <div className="container section-sm">
-        {/* Post Project Banner */}
+        {/* Post / Request Project Banner */}
         <div
           style={{
             background: "var(--accent-light)",
             border: "1.5px solid var(--accent)",
             borderRadius: 14,
-            padding: "20px 24px",
+            padding: "24px 28px",
             marginBottom: 28,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: 16
+            gap: 18
           }}
         >
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: "#7A5500", marginBottom: 4 }}>
-              Are you a client or small business owner with a task?
+          <div style={{ maxWidth: 580 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(232,160,32,0.25)", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: "#7A5500", marginBottom: 8 }}>
+              <span>💼 FOR CLIENTS & BUSINESSES</span>
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-mid)" }}>
-              Post a small project here and receive genuine, enthusiastic proposals from motivated learners.
+            <div style={{ fontWeight: 700, fontSize: 18, color: "#7A5500", marginBottom: 4 }}>
+              Need a Website, App, or Custom Project Built?
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6 }}>
+              Have our senior mentors and supervised student developers build your project, or post a micro-task for learners. Our admin team will directly email you back with feasible milestones!
             </div>
           </div>
-          <button className="sb-btn sb-btn-accent" onClick={() => setPostModalOpen(true)}>
-            + Post a Project
-          </button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              className="sb-btn sb-btn-accent"
+              style={{ fontWeight: 700 }}
+              onClick={() => setBuildRequestModalOpen(true)}
+            >
+              🚀 Ask Us to Build a Project
+            </button>
+            <button
+              className="sb-btn sb-btn-outline"
+              style={{ background: "#fff", borderColor: "var(--border)" }}
+              onClick={() => setPostModalOpen(true)}
+            >
+              + Post a Micro-Task
+            </button>
+          </div>
         </div>
+
+        {/* Confirmation banner when request is submitted */}
+        {buildConfirmation && (
+          <div
+            className="card"
+            style={{
+              padding: 24,
+              marginBottom: 28,
+              background: "var(--success-light)",
+              borderColor: "var(--success)",
+              borderWidth: 1.5
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--success)", marginBottom: 6 }}>
+                  ✅ Project Build Request Submitted to Admin!
+                </div>
+                <div style={{ fontSize: 14, color: "var(--text)", marginBottom: 8 }}>
+                  Project: <strong>"{buildConfirmation.title}"</strong> ({buildConfirmation.category}) — Target Budget: {buildConfirmation.budget}
+                </div>
+                <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6, maxWidth: 640 }}>
+                  We have logged your specifications into our database. Our platform admin will review your scope and reply to <strong>{buildConfirmation.clientEmail}</strong> within 24 hours.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <a
+                  href={createClientToAdminMailLink(buildConfirmation)}
+                  className="sb-btn sb-btn-primary"
+                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <span>✉️ Open Mail to Admin</span>
+                </a>
+                <button
+                  className="sb-btn sb-btn-ghost"
+                  onClick={() => setBuildConfirmation(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div style={{ display: "flex", gap: 14, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
@@ -393,6 +503,142 @@ export const ProjectsPage = ({ setPage, user, showToast }) => {
             </button>
             <button type="submit" className="sb-btn sb-btn-accent">
               Publish Project
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Ask Us to Build Your Project Modal */}
+      <Modal
+        isOpen={buildRequestModalOpen}
+        onClose={() => setBuildRequestModalOpen(false)}
+        title="Request SkillBridge to Build Your Project"
+      >
+        <p style={{ fontSize: 13, color: "var(--text-mid)", marginBottom: 16, lineHeight: 1.6 }}>
+          Have our mentor-guided team build your website, application, or business tool. Fill in your details below — our admin will review and <strong>reply directly to your email</strong> within 24 hours.
+        </p>
+
+        <form onSubmit={handleBuildRequestSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="grid-2">
+            <div>
+              <label className="input-label">Your Name / Business Name *</label>
+              <input
+                className="input-field"
+                placeholder="e.g. Rajesh Kumar or Apex Solutions"
+                value={buildForm.clientName}
+                onChange={(e) => setBuildForm({ ...buildForm, clientName: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="input-label">Email for Admin Reply *</label>
+              <input
+                className="input-field"
+                type="email"
+                placeholder="client@yourbusiness.com"
+                value={buildForm.clientEmail}
+                onChange={(e) => setBuildForm({ ...buildForm, clientEmail: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid-2">
+            <div>
+              <label className="input-label">Phone / WhatsApp (optional)</label>
+              <input
+                className="input-field"
+                placeholder="e.g. +91 98765 43210"
+                value={buildForm.clientPhone}
+                onChange={(e) => setBuildForm({ ...buildForm, clientPhone: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="input-label">Project Category *</label>
+              <select
+                className="input-field"
+                value={buildForm.category}
+                onChange={(e) => setBuildForm({ ...buildForm, category: e.target.value })}
+              >
+                {categories.filter((c) => c !== "All").map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="input-label">Project Title / Goal *</label>
+            <input
+              className="input-field"
+              placeholder="e.g. Modern Responsive Website for Dental Clinic"
+              value={buildForm.title}
+              onChange={(e) => setBuildForm({ ...buildForm, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="grid-2">
+            <div>
+              <label className="input-label">Target Budget (₹) *</label>
+              <select
+                className="input-field"
+                value={buildForm.budget}
+                onChange={(e) => setBuildForm({ ...buildForm, budget: e.target.value })}
+              >
+                <option value="₹1,000–₹3,000">₹1,000 – ₹3,000 (Small Task)</option>
+                <option value="₹3,000–₹8,000">₹3,000 – ₹8,000 (Standard Website)</option>
+                <option value="₹8,000–₹15,000">₹8,000 – ₹15,000 (E-commerce / App)</option>
+                <option value="₹15,000+">₹15,000+ (Custom System)</option>
+                <option value="Flexible">Flexible / Open to Quote</option>
+              </select>
+            </div>
+            <div>
+              <label className="input-label">Expected Timeline *</label>
+              <select
+                className="input-field"
+                value={buildForm.deadline}
+                onChange={(e) => setBuildForm({ ...buildForm, deadline: e.target.value })}
+              >
+                <option value="3-5 days">Urgent (3–5 days)</option>
+                <option value="1-2 weeks">Standard (1–2 weeks)</option>
+                <option value="3-4 weeks">Detailed (3–4 weeks)</option>
+                <option value="Flexible">Flexible Timeline</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="input-label">Detailed Requirements & Scope *</label>
+            <textarea
+              className="input-field"
+              rows={4}
+              placeholder="Describe what pages or features you need, any reference links, target audience, and preferred design style..."
+              value={buildForm.description}
+              onChange={(e) => setBuildForm({ ...buildForm, description: e.target.value })}
+              required
+              style={{ resize: "vertical" }}
+            />
+          </div>
+
+          <div style={{ background: "var(--surface-alt)", padding: "12px 16px", borderRadius: 8, fontSize: 12, color: "var(--text-mid)" }}>
+            ℹ️ When you submit, our system will notify the admin team. You will also get a direct link to send the formatted brief to <strong>community@skillbridge.org</strong> from your mail app.
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
+            <button
+              type="button"
+              className="sb-btn sb-btn-ghost"
+              onClick={() => setBuildRequestModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="sb-btn sb-btn-accent"
+              disabled={buildSubmitting}
+            >
+              {buildSubmitting ? "Submitting..." : "🚀 Send Request to Admin"}
             </button>
           </div>
         </form>

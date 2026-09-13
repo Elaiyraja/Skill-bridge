@@ -126,12 +126,18 @@ export const ContactPage = ({ showToast }) => {
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
                   >
                     <option value="General Inquiry">General Inquiry</option>
+                    <option value="Request Us to Build a Project">🚀 Request Us to Build a Project</option>
                     <option value="Become a Mentor">Volunteer as a Mentor</option>
                     <option value="Post a Project">Post a Client Micro-Project</option>
                     <option value="College Partnership">College / NGO Collaboration</option>
                     <option value="Technical Support">Technical Support</option>
                   </select>
                 </div>
+                {form.subject === "Request Us to Build a Project" && (
+                  <div style={{ background: "var(--accent-light)", padding: "10px 14px", borderRadius: 8, fontSize: 13, color: "#7A5500", border: "1px solid var(--accent)" }}>
+                    💡 <strong>Client Project Build Request:</strong> Our platform admin and technical mentors will review your scope and reply directly to your email address within 24 hours.
+                  </div>
+                )}
 
                 <div>
                   <label className="input-label">Your Message</label>

@@ -16,6 +16,9 @@ const LOCAL_ENROLLMENTS_KEY = "skillbridge_enrollments";
 const LOCAL_PROPOSALS_KEY = "skillbridge_proposals";
 const LOCAL_CERTS_KEY = "skillbridge_certificates";
 const LOCAL_MESSAGES_KEY = "skillbridge_contact_messages";
+const LOCAL_BUILD_REQUESTS_KEY = "skillbridge_project_build_requests";
+
+export const ADMIN_EMAIL = "community@skillbridge.org";
 
 // Helper for local storage
 const getLocalData = (key, defaultVal = []) => {
@@ -45,6 +48,26 @@ if (!localStorage.getItem(LOCAL_CERTS_KEY)) {
       issueDate: "2025-06-20",
       issuer: "SkillBridge Foundation",
       status: "Valid"
+    }
+  ]);
+}
+
+// Seed initial project build requests if empty
+if (!localStorage.getItem(LOCAL_BUILD_REQUESTS_KEY)) {
+  setLocalData(LOCAL_BUILD_REQUESTS_KEY, [
+    {
+      id: "req_demo_1",
+      clientName: "Murugan Handlooms",
+      clientEmail: "orders@muruganhandlooms.in",
+      clientPhone: "+91 98421 55678",
+      title: "E-Commerce Catalog Website for Traditional Sarees",
+      category: "Website",
+      budget: "₹5,000–₹10,000",
+      deadline: "10 days",
+      description: "We require a clean, responsive product showcase website with 50+ saree listings, photo gallery, and WhatsApp direct ordering button for customer inquiries.",
+      status: "Pending Review",
+      submittedAt: "2025-06-18T10:30:00.000Z",
+      adminNotes: "Good fit for web development track learners with mentor oversight."
     }
   ]);
 }
@@ -219,7 +242,7 @@ export const verifyCertificate = async (certificateId) => {
  * Save contact message
  */
 export const saveContactMessage = async (msg) => {
-  const record = { ...msg, timestamp: new Date().toISOString() };
+  const record = { ...msg, id: "msg_" + Date.now(), timestamp: new Date().toISOString() };
   if (isFirebaseConfigured && db) {
     try {
       await addDoc(collection(db, "contact_messages"), record);
@@ -228,7 +251,174 @@ export const saveContactMessage = async (msg) => {
     }
   }
   const messages = getLocalData(LOCAL_MESSAGES_KEY, []);
-  messages.push(record);
+  messages.unshift(record);
   setLocalData(LOCAL_MESSAGES_KEY, messages);
   return true;
+};
+
+/**
+ * Fetch contact messages for admin
+ */
+export const getContactMessages = async () => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const snap = await getDocs(collection(db, "contact_messages"));
+      if (!snap.empty) {
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      console.warn("Error reading contact messages from Firestore:", e);
+    }
+  }
+  return getLocalData(LOCAL_MESSAGES_KEY, []);
+};
+
+/**
+ * Save Client Request to Build a Project
+ */
+export const saveProjectBuildRequest = async (requestData) => {
+  const record = {
+    ...requestData,
+    id: "req_" + Date.now(),
+    status: "Pending Review",
+    submittedAt: new Date().toISOString(),
+    adminNotes: ""
+  };
+
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = await addDoc(collection(db, "project_requests"), record);
+      record.id = docRef.id;
+    } catch (err) {
+      console.warn("Firestore saveProjectBuildRequest error, saving locally:", err);
+    }
+  }
+
+  const list = getLocalData(LOCAL_BUILD_REQUESTS_KEY, []);
+  list.unshift(record);
+  setLocalData(LOCAL_BUILD_REQUESTS_KEY, list);
+  return record;
+};
+
+/**
+ * Fetch all Project Build Requests for Admin
+ */
+export const getProjectBuildRequests = async () => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const snap = await getDocs(collection(db, "project_requests"));
+      if (!snap.empty) {
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+    } catch (err) {
+      console.warn("Error reading project requests from Firestore:", err);
+    }
+  }
+  return getLocalData(LOCAL_BUILD_REQUESTS_KEY, []);
+};
+
+/**
+ * Update Project Build Request Status or Admin Notes
+ */
+export const updateProjectBuildRequest = async (requestId, updates) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = doc(db, "project_requests", requestId);
+      await updateDoc(docRef, updates);
+    } catch (err) {
+      console.warn("Error updating project request in Firestore:", err);
+    }
+  }
+
+  const list = getLocalData(LOCAL_BUILD_REQUESTS_KEY, []);
+  const updated = list.map((item) => (item.id === requestId ? { ...item, ...updates } : item));
+  setLocalData(LOCAL_BUILD_REQUESTS_KEY, updated);
+  return updated;
+};
+
+/**
+ * Helper to create a pre-composed mailto URL from Client to Admin
+ */
+export const createClientToAdminMailLink = ({ clientName, clientEmail, title, category, budget, deadline, description }) => {
+  const subject = `[Project Build Request] ${title || "New Project Inquiry"} - from ${clientName || "Client"}`;
+  const body = `Dear SkillBridge Admin Team,
+
+I would like to request SkillBridge to build the following project:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROJECT SPECIFICATIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Project Title: ${title || "N/A"}
+• Category: ${category || "General"}
+• Estimated Budget: ${budget || "To be discussed"}
+• Desired Timeline: ${deadline || "Flexible"}
+
+• Client Name: ${clientName || "N/A"}
+• Client Contact Email: ${clientEmail || "N/A"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROJECT REQUIREMENTS & SCOPE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${description || "No additional description provided."}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Please review our requirements and let us know your feasibility, timeline, and next steps.
+
+Thank you!
+${clientName || "Client"}`;
+
+  return `mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+
+/**
+ * Helper to create a pre-composed reply mailto URL from Admin to Client
+ */
+export const createAdminReplyMailLink = ({
+  clientName,
+  clientEmail,
+  title,
+  category,
+  budget,
+  deadline,
+  decision = "accept", // "accept" | "discuss" | "decline"
+  customNotes = ""
+}) => {
+  const subject = `Re: SkillBridge Project Build Request - "${title}"`;
+  
+  let intro = `We are pleased to inform you that our team has reviewed your request to build "${title}" and we would be delighted to take this up with our mentor-guided developer team!`;
+  if (decision === "discuss") {
+    intro = `Thank you for your project request to build "${title}". We have reviewed your initial specifications and would like to clarify a few details before finalizing.`;
+  } else if (decision === "decline") {
+    intro = `Thank you for considering SkillBridge for "${title}". After reviewing our current learner team capacity, we are unfortunately unable to take on this specific project right now.`;
+  }
+
+  const body = `Dear ${clientName || "Client"},
+
+Thank you for reaching out to SkillBridge.
+
+${intro}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REVIEWED DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Project: ${title}
+• Category: ${category}
+• Target Budget: ${budget}
+• Target Delivery: ${deadline}
+${customNotes ? `\n• Notes from Admin: ${customNotes}\n` : ""}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROPOSED NEXT STEPS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. We can coordinate via this email thread or schedule a brief 10-minute discovery call.
+2. A senior project mentor will be assigned along with top learners from our relevant course track.
+3. We will share a clear milestone plan with deliverables for your review.
+
+Please reply to this email with any preferred call timings or additional documentation you have.
+
+Warm regards,
+SkillBridge Administration & Project Mentorship Team
+Email: ${ADMIN_EMAIL}
+Website: https://skillbridge-liart.vercel.app`;
+
+  return `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 };
