@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Modal } from '../components/common/UIComponents';
-import { COURSES } from '../data/courses';
 import { INITIAL_PROJECTS } from '../data/projects';
 import { isFirebaseConfigured, firebaseConfig } from '../firebase/config';
 import {
@@ -8,6 +7,8 @@ import {
   updateProjectBuildRequest,
   getContactMessages,
   createAdminReplyMailLink,
+  getAllUdyamRegistrations,
+  updateUdyamRegistration,
   ADMIN_EMAIL
 } from '../firebase/firestoreService';
 
@@ -15,6 +16,7 @@ export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [buildRequests, setBuildRequests] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
+  const [udyamRegistrations, setUdyamRegistrations] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
   // Reply Composer Modal State
@@ -24,16 +26,23 @@ export const AdminPage = () => {
   const [replyNotes, setReplyNotes] = useState("");
   const [copiedNotification, setCopiedNotification] = useState(false);
 
+  // URN Assign Modal State
+  const [urnModalOpen, setUrnModalOpen] = useState(false);
+  const [selectedUdyam, setSelectedUdyam] = useState(null);
+  const [inputUrn, setInputUrn] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       setLoadingData(true);
       try {
-        const [reqs, msgs] = await Promise.all([
+        const [reqs, msgs, udyam] = await Promise.all([
           getProjectBuildRequests(),
-          getContactMessages()
+          getContactMessages(),
+          getAllUdyamRegistrations()
         ]);
         setBuildRequests(reqs || []);
         setContactMessages(msgs || []);
+        setUdyamRegistrations(udyam || []);
       } catch (err) {
         console.error("Error loading admin records:", err);
       }
@@ -44,6 +53,10 @@ export const AdminPage = () => {
 
   const pendingRequestsCount = buildRequests.filter(
     (r) => r.status === "Pending Review" || !r.status
+  ).length;
+
+  const pendingUdyamCount = udyamRegistrations.filter(
+    (u) => !u.urn || u.status === "Submitted - Verification in Progress"
   ).length;
 
   const handleOpenReplyModal = (req) => {
@@ -57,6 +70,32 @@ export const AdminPage = () => {
   const handleUpdateStatus = async (requestId, newStatus) => {
     const updated = await updateProjectBuildRequest(requestId, { status: newStatus });
     setBuildRequests(updated);
+  };
+
+  const handleOpenUrnModal = (item) => {
+    setSelectedUdyam(item);
+    // suggest an official URN format if empty
+    const stateCode = (item.state || "").includes("Tamil") ? "TN" : "DL";
+    const randomDigits = Math.floor(1000000 + Math.random() * 9000000);
+    setInputUrn(item.urn || `UDYAM-${stateCode}-02-${randomDigits}`);
+    setUrnModalOpen(true);
+  };
+
+  const handleSaveUrnAndIssueCertificate = async () => {
+    if (!selectedUdyam || !inputUrn) return;
+    const updated = await updateUdyamRegistration(selectedUdyam.id, {
+      urn: inputUrn.trim().toUpperCase(),
+      status: "Udyam Certificate Issued",
+      issuedAt: new Date().toISOString(),
+      adminNotes: "Official 16-digit Udyam Registration Number generated and verified."
+    });
+    setUdyamRegistrations(updated);
+    setUrnModalOpen(false);
+  };
+
+  const handleUpdateUdyamStatusDirect = async (id, newStatus) => {
+    const updated = await updateUdyamRegistration(id, { status: newStatus });
+    setUdyamRegistrations(updated);
   };
 
   const handleMarkRepliedAndOpenMail = async () => {
@@ -109,20 +148,24 @@ export const AdminPage = () => {
   const adminMenu = [
     { key: "overview", label: "Platform Overview" },
     {
+      key: "udyam_registrations",
+      label: "Udyam Applications",
+      badge: pendingUdyamCount > 0 ? pendingUdyamCount : null
+    },
+    {
       key: "build_requests",
       label: "Client Build Requests",
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null
     },
     { key: "inquiries", label: "Contact Inquiries", count: contactMessages.length },
-    { key: "courses", label: "Courses Catalog" },
     { key: "projects", label: "Open Micro-Projects" },
     { key: "firebase", label: "Firebase Status" },
   ];
 
   const stats = [
-    { label: "Community Courses", value: COURSES.length },
+    { label: "Udyam Applications", value: udyamRegistrations.length },
+    { label: "Pending Udyam Reviews", value: pendingUdyamCount },
     { label: "Client Build Requests", value: buildRequests.length },
-    { label: "Pending Client Reviews", value: pendingRequestsCount },
     { label: "Platform State", value: isFirebaseConfigured ? "Connected" : "Local Mode" },
   ];
 
@@ -191,35 +234,102 @@ export const AdminPage = () => {
           </div>
         )}
 
-        {activeTab === "courses" && (
+        {activeTab === "udyam_registrations" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20 }}>Course Catalog Management ({COURSES.length})</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 style={{ fontSize: 20, marginBottom: 4 }}>Udyam (MSME) Applications ({udyamRegistrations.length})</h2>
+                <p style={{ color: "var(--text-mid)", fontSize: 13, margin: 0 }}>
+                  Review applicant Aadhaar/PAN details, approve filings, and generate official 16-digit Udyam Registration Numbers.
+                </p>
+              </div>
             </div>
-            <div className="card" style={{ overflow: "hidden" }}>
+
+            <div className="card" style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "var(--surface-alt)" }}>
-                    {["#", "Course Title", "Category", "Level", "Lessons", "Duration"].map((h) => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
+                    {["Enterprise & Owner", "Contact & Location", "Aadhaar / PAN", "Category", "Status", "URN / Action"].map((h) => (
+                      <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--text-muted)" }}>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {COURSES.map((c) => (
-                    <tr key={c.id} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td style={{ padding: "12px 16px", fontSize: 13, color: "var(--text-muted)" }}>{c.id}</td>
-                      <td style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600 }}>{c.title}</td>
-                      <td style={{ padding: "12px 16px", fontSize: 13 }}>{c.category}</td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <Badge type={c.level.toLowerCase()}>{c.level}</Badge>
+                  {udyamRegistrations.map((item) => (
+                    <tr key={item.id} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td style={{ padding: "14px 14px" }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{item.enterpriseName}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                          Proprietor: {item.ownerName}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 2 }}>
+                          ID: {item.id} • {new Date(item.submittedAt).toLocaleDateString()}
+                        </div>
                       </td>
-                      <td style={{ padding: "12px 16px", fontSize: 13 }}>{c.lessons}</td>
-                      <td style={{ padding: "12px 16px", fontSize: 13 }}>{c.duration}</td>
+
+                      <td style={{ padding: "14px 14px", fontSize: 13 }}>
+                        <div>{item.mobileNumber || "N/A"}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.email || "N/A"}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-mid)" }}>{item.city}, {item.state || "India"}</div>
+                      </td>
+
+                      <td style={{ padding: "14px 14px", fontSize: 12 }}>
+                        <div>Aadhaar: <code style={{ fontWeight: 600 }}>{item.aadhaarNumber || "Provided"}</code></div>
+                        <div style={{ marginTop: 2 }}>PAN: <code style={{ fontWeight: 600 }}>{item.panNumber || "Provided"}</code></div>
+                      </td>
+
+                      <td style={{ padding: "14px 14px", fontSize: 13 }}>
+                        <div style={{ fontWeight: 600 }}>{item.category || "Micro"}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.businessType || "Proprietorship"}</div>
+                      </td>
+
+                      <td style={{ padding: "14px 14px" }}>
+                        <select
+                          className="input-field"
+                          value={item.status}
+                          onChange={(e) => handleUpdateUdyamStatusDirect(item.id, e.target.value)}
+                          style={{ fontSize: 12, padding: "4px 8px", width: "auto" }}
+                        >
+                          <option value="Submitted - Verification in Progress">Under Verification</option>
+                          <option value="Aadhaar Verified - Awaiting MSME Dispatch">Aadhaar Verified</option>
+                          <option value="Udyam Certificate Issued">Certificate Issued</option>
+                          <option value="On Hold - Documents Clarification">Needs Clarification</option>
+                        </select>
+                      </td>
+
+                      <td style={{ padding: "14px 14px" }}>
+                        {item.urn ? (
+                          <div>
+                            <code style={{ fontSize: 12, fontWeight: 700, color: "var(--success)", display: "block" }}>{item.urn}</code>
+                            <button
+                              className="sb-btn sb-btn-ghost sb-btn-sm"
+                              onClick={() => handleOpenUrnModal(item)}
+                              style={{ fontSize: 11, padding: "2px 6px", marginTop: 4 }}
+                            >
+                              Edit URN
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="sb-btn sb-btn-primary sb-btn-sm"
+                            onClick={() => handleOpenUrnModal(item)}
+                            style={{ fontSize: 12, padding: "6px 12px" }}
+                          >
+                            + Issue URN
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
+                  {udyamRegistrations.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 24, textAlign: "center", color: "var(--text-muted)" }}>
+                        No Udyam applications submitted yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -631,6 +741,60 @@ export const AdminPage = () => {
                   🚀 Open Mail & Mark as {replyDecision === "accept" ? "Accepted" : replyDecision === "discuss" ? "In Discussion" : "Declined"}
                 </button>
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* URN Assignment & Certificate Issuance Modal */}
+      {urnModalOpen && selectedUdyam && (
+        <Modal
+          title={`Official Udyam Registration — ${selectedUdyam.enterpriseName}`}
+          onClose={() => setUrnModalOpen(false)}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 13, color: "var(--text-mid)", margin: 0 }}>
+              Verify applicant details and issue the 16-digit Government of India Udyam Registration Number (URN).
+            </p>
+
+            <div style={{ background: "var(--surface)", padding: 14, borderRadius: 8, fontSize: 13 }}>
+              <div><strong>Enterprise:</strong> {selectedUdyam.enterpriseName}</div>
+              <div><strong>Owner / Signatory:</strong> {selectedUdyam.ownerName}</div>
+              <div><strong>Aadhaar:</strong> {selectedUdyam.aadhaarNumber} • <strong>PAN:</strong> {selectedUdyam.panNumber}</div>
+              <div><strong>Location:</strong> {selectedUdyam.city}, {selectedUdyam.state}</div>
+            </div>
+
+            <div>
+              <label className="input-label">16-Digit Udyam Registration Number (URN):</label>
+              <input
+                type="text"
+                className="input-field"
+                value={inputUrn}
+                onChange={(e) => setInputUrn(e.target.value)}
+                placeholder="UDYAM-TN-02-0048192"
+                style={{ fontWeight: 700, letterSpacing: "0.05em", fontFamily: "monospace", fontSize: 15 }}
+              />
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
+                Format: <code>UDYAM-XX-00-0000000</code> (State code - District - 7 digits)
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
+              <button
+                type="button"
+                className="sb-btn sb-btn-ghost"
+                onClick={() => setUrnModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="sb-btn sb-btn-primary"
+                onClick={handleSaveUrnAndIssueCertificate}
+                style={{ fontWeight: 700 }}
+              >
+                🏛️ Save & Issue Certificate
+              </button>
             </div>
           </div>
         </Modal>

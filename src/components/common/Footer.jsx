@@ -3,16 +3,15 @@ import React from 'react';
 export const Footer = ({ setPage }) => {
   const navigateSafe = (target) => {
     const routeMap = {
-      "Courses": "courses",
-      "Free Learning": "courses",
+      "Udyam Registration": "udyam",
+      "Verify URN": "verify",
+      "MSME Benefits": "udyam",
       "AI Assistant": "ai",
-      "Certificates": "verify",
-      "Projects": "projects",
-      "Freelance": "projects",
-      "Build Portfolio": "courses",
-      "Mentors": "about",
+      "Small Projects": "projects",
+      "Request a Build": "projects",
+      "Our Work": "projects",
       "About Us": "about",
-      "Our Mission": "about",
+      "MSME Guidelines": "about",
       "Success Stories": "stories",
       "Contact": "contact",
     };
@@ -34,16 +33,16 @@ export const Footer = ({ setPage }) => {
               <div style={{ fontFamily: "Lora, serif", fontWeight: 700, fontSize: 20 }}>SkillBridge</div>
             </div>
             <p style={{ fontSize: 14, opacity: 0.75, lineHeight: 1.7, maxWidth: 260 }}>
-              Free practical learning, mentorship, and opportunities for students who want to build a better future.
+              Official assistance for MSME / Udyam Registration & affordable execution of small-level business and digital projects.
             </p>
           </div>
 
-          {/* Learn Column */}
+          {/* Udyam Services Column */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Learn
+              Udyam Services
             </div>
-            {["Courses", "Free Learning", "AI Assistant", "Certificates"].map((item) => (
+            {["Udyam Registration", "Verify URN", "MSME Benefits", "AI Assistant"].map((item) => (
               <div
                 key={item}
                 style={{ fontSize: 14, opacity: 0.75, marginBottom: 8, cursor: "pointer", transition: "opacity 0.15s" }}
@@ -56,12 +55,12 @@ export const Footer = ({ setPage }) => {
             ))}
           </div>
 
-          {/* Work Column */}
+          {/* Small Projects Column */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Work
+              Small Projects
             </div>
-            {["Projects", "Freelance", "Build Portfolio", "Mentors"].map((item) => (
+            {["Small Projects", "Request a Build", "Our Work", "AI Assistant"].map((item) => (
               <div
                 key={item}
                 style={{ fontSize: 14, opacity: 0.75, marginBottom: 8, cursor: "pointer", transition: "opacity 0.15s" }}
@@ -79,7 +78,7 @@ export const Footer = ({ setPage }) => {
             <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               Organization
             </div>
-            {["About Us", "Our Mission", "Success Stories", "Contact"].map((item) => (
+            {["About Us", "MSME Guidelines", "Success Stories", "Contact"].map((item) => (
               <div
                 key={item}
                 style={{ fontSize: 14, opacity: 0.75, marginBottom: 8, cursor: "pointer", transition: "opacity 0.15s" }}
@@ -95,10 +94,10 @@ export const Footer = ({ setPage }) => {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.12)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div style={{ fontSize: 13, opacity: 0.55 }}>
-            © 2025 SkillBridge Foundation. A community social-impact education initiative.
+            © 2025 SkillBridge MSME Hub. Empowering micro, small, and medium businesses across India.
           </div>
           <div style={{ fontSize: 12, opacity: 0.45 }}>
-            Certificates issued by SkillBridge organization. Independent social credential, not a Government of India certification.
+            Assistance portal for Udyam (Ministry of MSME, Govt of India) & hands-on delivery of small-level projects.
           </div>
         </div>
       </div>

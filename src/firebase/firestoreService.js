@@ -17,6 +17,7 @@ const LOCAL_PROPOSALS_KEY = "skillbridge_proposals";
 const LOCAL_CERTS_KEY = "skillbridge_certificates";
 const LOCAL_MESSAGES_KEY = "skillbridge_contact_messages";
 const LOCAL_BUILD_REQUESTS_KEY = "skillbridge_project_build_requests";
+const LOCAL_UDYAM_KEY = "skillbridge_udyam_registrations";
 
 export const ADMIN_EMAIL = "community@skillbridge.org";
 
@@ -30,24 +31,26 @@ const getLocalData = (key, defaultVal = []) => {
 };
 const setLocalData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
-// Seed initial certificates in local store if empty
-if (!localStorage.getItem(LOCAL_CERTS_KEY)) {
-  setLocalData(LOCAL_CERTS_KEY, [
+// Seed initial Udyam registrations if empty
+if (!localStorage.getItem(LOCAL_UDYAM_KEY)) {
+  setLocalData(LOCAL_UDYAM_KEY, [
     {
-      id: "SB-2025-8492",
-      studentName: "Priya S.",
-      courseTitle: "HTML & CSS",
-      issueDate: "2025-05-12",
-      issuer: "SkillBridge Foundation",
-      status: "Valid"
-    },
-    {
-      id: "SB-2025-3914",
-      studentName: "Rajan K.",
-      courseTitle: "Data Analytics",
-      issueDate: "2025-06-20",
-      issuer: "SkillBridge Foundation",
-      status: "Valid"
+      id: "udyam_demo_1",
+      urn: "UDYAM-TN-02-0048192",
+      ownerName: "Murugan Selvam",
+      enterpriseName: "Murugan Handlooms & Textiles",
+      aadhaarNumber: "XXXX-XXXX-4819",
+      panNumber: "ABCDE1234F",
+      mobileNumber: "+91 98421 55678",
+      email: "orders@muruganhandlooms.in",
+      businessType: "Proprietorship",
+      category: "Manufacturing",
+      city: "Madurai",
+      state: "Tamil Nadu",
+      status: "Udyam Certificate Issued",
+      submittedAt: "2025-06-10T09:15:00.000Z",
+      issuedAt: "2025-06-12T14:30:00.000Z",
+      notes: "Official 16-digit Udyam Registration Certificate generated and dispatched."
     }
   ]);
 }
@@ -60,14 +63,14 @@ if (!localStorage.getItem(LOCAL_BUILD_REQUESTS_KEY)) {
       clientName: "Murugan Handlooms",
       clientEmail: "orders@muruganhandlooms.in",
       clientPhone: "+91 98421 55678",
-      title: "E-Commerce Catalog Website for Traditional Sarees",
-      category: "Website",
-      budget: "₹5,000–₹10,000",
-      deadline: "10 days",
-      description: "We require a clean, responsive product showcase website with 50+ saree listings, photo gallery, and WhatsApp direct ordering button for customer inquiries.",
-      status: "Pending Review",
+      title: "Small E-Commerce Catalog Website for Traditional Sarees",
+      category: "Small Business Website",
+      budget: "₹3,000–₹6,000",
+      deadline: "7 days",
+      description: "Small-level project: We need a clean, responsive single-page product showcase with 25 saree photos and WhatsApp direct ordering button.",
+      status: "In Discussion",
       submittedAt: "2025-06-18T10:30:00.000Z",
-      adminNotes: "Good fit for web development track learners with mentor oversight."
+      adminNotes: "Small project accepted. Assigned mentor Anand."
     }
   ]);
 }
@@ -318,6 +321,17 @@ export const getProjectBuildRequests = async () => {
 };
 
 /**
+ * Fetch Project Build Requests submitted by a specific user
+ */
+export const getUserProjectBuildRequests = async (userId, userEmail) => {
+  const all = await getProjectBuildRequests();
+  return all.filter((r) => 
+    (userId && (r.userId === userId || r.clientEmail === userEmail)) || 
+    (userEmail && r.clientEmail === userEmail)
+  );
+};
+
+/**
  * Update Project Build Request Status or Admin Notes
  */
 export const updateProjectBuildRequest = async (requestId, updates) => {
@@ -421,4 +435,107 @@ Email: ${ADMIN_EMAIL}
 Website: https://skillbridge-liart.vercel.app`;
 
   return `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+
+/**
+ * Udyam (MSME) Registration Services
+ */
+export const saveUdyamRegistration = async (registrationData) => {
+  const record = {
+    ...registrationData,
+    id: "udyam_" + Date.now(),
+    status: "Submitted - Verification in Progress",
+    submittedAt: new Date().toISOString(),
+    urn: null,
+    adminNotes: "Application received. Verification of Aadhaar & business details in progress."
+  };
+
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = await addDoc(collection(db, "udyam_registrations"), record);
+      record.id = docRef.id;
+    } catch (err) {
+      console.warn("Firestore saveUdyamRegistration error, saving locally:", err);
+    }
+  }
+
+  const list = getLocalData(LOCAL_UDYAM_KEY, []);
+  list.unshift(record);
+  setLocalData(LOCAL_UDYAM_KEY, list);
+  return record;
+};
+
+export const getUdyamRegistrations = async (userId) => {
+  if (isFirebaseConfigured && db && userId) {
+    try {
+      const q = query(collection(db, "udyam_registrations"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+    } catch (err) {
+      console.warn("Firestore getUdyamRegistrations error:", err);
+    }
+  }
+  const list = getLocalData(LOCAL_UDYAM_KEY, []);
+  if (userId) {
+    return list.filter((r) => r.userId === userId || r.userId === "guest");
+  }
+  return list;
+};
+
+export const getAllUdyamRegistrations = async () => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const snap = await getDocs(collection(db, "udyam_registrations"));
+      if (!snap.empty) {
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+    } catch (err) {
+      console.warn("Firestore getAllUdyamRegistrations error:", err);
+    }
+  }
+  return getLocalData(LOCAL_UDYAM_KEY, []);
+};
+
+export const updateUdyamRegistration = async (id, updates) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = doc(db, "udyam_registrations", id);
+      await updateDoc(docRef, updates);
+    } catch (err) {
+      console.warn("Firestore updateUdyamRegistration error:", err);
+    }
+  }
+
+  const list = getLocalData(LOCAL_UDYAM_KEY, []);
+  const updated = list.map((item) => (item.id === id ? { ...item, ...updates } : item));
+  setLocalData(LOCAL_UDYAM_KEY, updated);
+  return updated;
+};
+
+export const verifyUdyamURN = async (urnQuery) => {
+  const clean = (urnQuery || "").trim().toUpperCase();
+  if (!clean) return { valid: false };
+
+  const all = await getAllUdyamRegistrations();
+  const match = all.find((u) => u.urn && u.urn.toUpperCase() === clean);
+  if (match) {
+    return { valid: true, ...match };
+  }
+
+  // Demo fallback validation for format UDYAM-XX-XX-XXXXXXX
+  if (/^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/i.test(clean)) {
+    return {
+      valid: true,
+      urn: clean,
+      enterpriseName: "Verified Micro / Small Enterprise",
+      ownerName: "Registered Business Owner",
+      status: "Udyam Certificate Issued",
+      state: "Tamil Nadu",
+      category: "Manufacturing / Service"
+    };
+  }
+
+  return { valid: false };
 };

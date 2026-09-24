@@ -6,8 +6,7 @@ import { SkillMateFAB } from './components/common/SkillMateFAB';
 import { SkillMateAI } from './components/chat/SkillMateAI';
 
 import { HomePage } from './pages/Home';
-import { CoursesPage } from './pages/Courses';
-import { CourseDetailPage } from './pages/CourseDetail';
+import { UdyamPage } from './pages/Udyam';
 import { ProjectsPage } from './pages/Projects';
 import { AboutPage } from './pages/About';
 import { StoriesPage } from './pages/Stories';
@@ -18,36 +17,23 @@ import { ContactPage } from './pages/Contact';
 import { AuthPage } from './pages/Auth';
 
 import { subscribeToAuthChanges, logoutUser } from './firebase/authService';
-import { getUserEnrolledCourseIds, enrollInCourse } from './firebase/firestoreService';
+import { getUserEnrolledCourseIds } from './firebase/firestoreService';
 
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
-  const [enrolledIds, setEnrolledIds] = useState([]);
   const [toast, setToast] = useState(null);
 
   // Subscribe to Firebase / Local Auth changes
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges(async (currentUser) => {
       setUser(currentUser);
-      if (currentUser?.uid) {
-        const ids = await getUserEnrolledCourseIds(currentUser.uid);
-        setEnrolledIds(ids);
-      }
     });
     return () => unsubscribe();
   }, []);
 
   const showToast = (msg) => {
     setToast(msg);
-  };
-
-  const handleEnrollCourse = async (courseId) => {
-    const numericId = Number(courseId);
-    if (!enrolledIds.includes(numericId)) {
-      const updated = await enrollInCourse(user?.uid || "usr_guest", numericId);
-      setEnrolledIds([...updated]);
-    }
   };
 
   const handleSignOut = async () => {
@@ -59,23 +45,13 @@ export default function App() {
 
   const renderPage = () => {
     if (page === "home") {
-      return <HomePage setPage={setPage} user={user} enrolledIds={enrolledIds} />;
+      return <HomePage setPage={setPage} user={user} />;
     }
-    if (page === "courses") {
-      return <CoursesPage setPage={setPage} enrolledIds={enrolledIds} />;
+    if (page === "udyam") {
+      return <UdyamPage setPage={setPage} user={user} showToast={showToast} initialTab="apply" />;
     }
-    if (page.startsWith("course-")) {
-      const id = page.replace("course-", "");
-      return (
-        <CourseDetailPage
-          courseId={id}
-          setPage={setPage}
-          user={user}
-          enrolledIds={enrolledIds}
-          onEnroll={handleEnrollCourse}
-          showToast={showToast}
-        />
-      );
+    if (page === "verify") {
+      return <UdyamPage setPage={setPage} user={user} showToast={showToast} initialTab="verify" />;
     }
     if (page === "projects") {
       return <ProjectsPage setPage={setPage} user={user} showToast={showToast} />;
@@ -109,7 +85,7 @@ export default function App() {
         <DashboardPage
           user={user}
           setPage={setPage}
-          enrolledIds={enrolledIds}
+          showToast={showToast}
           onSignOut={handleSignOut}
         />
       ) : (

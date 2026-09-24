@@ -1,382 +1,362 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Icon } from '../components/common/Icon';
-import { Badge, ProgressBar, Avatar, Tag } from '../components/common/UIComponents';
-import { COURSES } from '../data/courses';
-import { INITIAL_PROJECTS } from '../data/projects';
-import { STATS, SUCCESS_STORIES, MENTORS } from '../data/community';
+import { Badge, Tag } from '../components/common/UIComponents';
 
-export const CourseCard = ({ course, setPage, isEnrolled, progress = 0 }) => (
-  <div
-    className="card"
-    style={{ padding: 22, cursor: "pointer", display: "flex", flexDirection: "column", height: "100%" }}
-    onClick={() => setPage(`course-${course.id}`)}
-  >
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-      <Badge type={course.level.toLowerCase()}>{course.level}</Badge>
-      <Badge type="free">100% FREE</Badge>
-    </div>
-
-    <h3 style={{ fontSize: 17, fontFamily: "Inter, sans-serif", fontWeight: 600, marginBottom: 8, color: "var(--text)" }}>
-      {course.title}
-    </h3>
-
-    <p style={{ fontSize: 13, color: "var(--text-mid)", marginBottom: 12, lineHeight: 1.6, flex: 1 }}>
-      {course.description}
-    </p>
-
-    <div style={{ display: "flex", gap: 14, fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
-      <span><Icon name="clock" size={12} /> {course.duration}</span>
-      <span><Icon name="book" size={12} /> {course.lessons} lessons</span>
-    </div>
-
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 16 }}>
-      {course.skills.map((s) => (
-        <Tag key={s}>{s}</Tag>
-      ))}
-    </div>
-
-    {isEnrolled ? (
-      <div style={{ marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--surface-alt)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
-          <span style={{ color: "var(--primary)", fontWeight: 600 }}>Enrolled</span>
-          <span>{progress}% complete</span>
-        </div>
-        <ProgressBar value={progress} />
-      </div>
-    ) : (
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "var(--text-muted)", marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--surface-alt)" }}>
-        <span><Icon name="users" size={12} /> {course.instructor}</span>
-        <span style={{ color: "var(--primary)", fontWeight: 600 }}>View Course →</span>
-      </div>
-    )}
-  </div>
-);
-
-export const HomePage = ({ setPage, user, enrolledIds = [] }) => {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const categories = ["All", "Foundation", "Web", "Programming", "Design", "AI/ML", "Career"];
-
-  const filtered = activeCategory === "All"
-    ? COURSES.slice(0, 6)
-    : COURSES.filter((c) => c.category === activeCategory).slice(0, 6);
+export const HomePage = ({ setPage, user }) => {
+  const smallProjects = [
+    {
+      id: "sp-1",
+      title: "Simple Business Website",
+      category: "Web Design",
+      budget: "₹1,500 – ₹3,500",
+      timeline: "3–5 days",
+      icon: "🌐",
+      desc: "Clean, mobile-responsive single-page or 3-page website showcasing your shop, services, photo gallery, and WhatsApp direct ordering button."
+    },
+    {
+      id: "sp-2",
+      title: "Excel / Sheets Billing & Inventory",
+      category: "Data & Billing",
+      budget: "₹500 – ₹1,200",
+      timeline: "2 days",
+      icon: "📊",
+      desc: "Automated invoice calculation, GST calculation, stock tracker, and daily sales report in Excel or Google Sheets."
+    },
+    {
+      id: "sp-3",
+      title: "Social Media Banner Pack (5-10 Designs)",
+      category: "Graphic Design",
+      budget: "₹400 – ₹800",
+      timeline: "2 days",
+      icon: "🎨",
+      desc: "Eye-catching festival discount graphics, promotional offers, and product posters formatted for WhatsApp status and Instagram."
+    },
+    {
+      id: "sp-4",
+      title: "Google Business Profile & Maps Setup",
+      category: "Local SEO",
+      budget: "₹500 – ₹1,000",
+      timeline: "24 hours",
+      icon: "📍",
+      desc: "Setup and optimize your local shop on Google Maps & Google Search with store hours, photos, directions, and phone numbers."
+    },
+    {
+      id: "sp-5",
+      title: "Catalog Data Entry & Clean-up",
+      category: "Data Entry",
+      budget: "₹300 – ₹800",
+      timeline: "2 days",
+      icon: "📝",
+      desc: "Convert paper receipts, handwritten registers, or scanned PDFs into well-structured, error-free digital spreadsheets."
+    },
+    {
+      id: "sp-6",
+      title: "Small Automation / WhatsApp Script",
+      category: "Python & Tools",
+      budget: "₹800 – ₹2,000",
+      timeline: "3 days",
+      icon: "⚙️",
+      desc: "Automated customer follow-up message scripts, scheduled email alerts, or simple data scraping tailored to your workflow."
+    }
+  ];
 
   return (
     <div>
       {/* Hero Section */}
-      <section className="hero-bg" style={{ padding: "84px 0 76px", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: -100, right: -100, width: 420, height: 420, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -60, left: "35%", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
+      <section className="hero-bg" style={{ padding: "76px 0 68px", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: -80, right: -80, width: 380, height: 380, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -60, left: "40%", width: 280, height: 280, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
 
-        <div className="container" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 48 }}>
+        <div className="container" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 40 }}>
           <div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,160,32,0.18)", border: "1px solid rgba(232,160,32,0.4)", borderRadius: 20, padding: "5px 14px", marginBottom: 20 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,160,32,0.18)", border: "1px solid rgba(232,160,32,0.4)", borderRadius: 20, padding: "5px 14px", marginBottom: 18 }}>
+              <span style={{ fontSize: 13 }}>🇮🇳</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.06em" }}>
-                FREE FOR ALL LEARNERS
+                UDYAM MSME REGISTRATION & SMALL PROJECTS HUB
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.4rem)", color: "#fff", lineHeight: 1.18, marginBottom: 20, maxWidth: 620 }}>
-              Learn Skills.<br />Build Real Projects.<br />Shape Your Future.
+
+            <h1 style={{ fontSize: "clamp(2.1rem, 4.5vw, 3.2rem)", color: "#fff", lineHeight: 1.18, marginBottom: 18, maxWidth: 640 }}>
+              Official Udyam Registration & Small-Level Projects Done for You.
             </h1>
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.8)", maxWidth: 540, lineHeight: 1.8, marginBottom: 34 }}>
-              Free practical education, mentorship, and entry-level freelance projects for motivated students across Tamil Nadu and beyond. Learn in English or தமிழ் — 100% free forever.
+
+            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.85)", maxWidth: 580, lineHeight: 1.7, marginBottom: 30 }}>
+              Need government MSME certification? We assist with <strong>instant Udyam Registration</strong> to unlock collateral-free bank loans & subsidies. Plus, <strong>small-level digital projects will be done quickly</strong> — from business websites and billing sheets to local SEO and design.
             </p>
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <button className="sb-btn sb-btn-accent sb-btn-lg" onClick={() => setPage("courses")}>
-                Start Learning Free
+
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                className="sb-btn sb-btn-accent sb-btn-lg"
+                style={{ fontWeight: 700 }}
+                onClick={() => setPage("udyam")}
+              >
+                📝 Register for Udyam (MSME)
               </button>
               <button
                 className="sb-btn sb-btn-lg"
                 style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.3)" }}
                 onClick={() => setPage("projects")}
               >
-                Explore Projects
+                🚀 Request a Small Project
               </button>
             </div>
-          </div>
 
-          {/* Stats Cards */}
-          <div className="hide-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, minWidth: 290 }}>
-            {STATS.map((s) => (
-              <div
-                key={s.label}
-                style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.16)",
-                  borderRadius: 14,
-                  padding: "20px 18px",
-                  backdropFilter: "blur(10px)"
-                }}
-              >
-                <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#fff", fontFamily: "Inter, sans-serif" }}>
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>{s.label}</div>
-                <div style={{ fontSize: 11, color: "var(--accent)", marginTop: 2, fontWeight: 500 }}>{s.note}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 7-Step Pathway */}
-      <section className="section-sm" style={{ background: "var(--surface-alt)" }}>
-        <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div className="section-label">The Journey</div>
-            <h2 className="section-title">How SkillBridge Works</h2>
-            <p className="section-sub" style={{ margin: "0 auto" }}>A structured pipeline from initial interest to paid freelance opportunities.</p>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 8 }}>
-            {[
-              "Join Free",
-              "Learn Lessons",
-              "Practice Hands-on",
-              "Get Certified",
-              "Build Portfolio",
-              "Bid on Projects",
-              "Earn & Grow"
-            ].map((step, i) => (
-              <React.Fragment key={step}>
-                <div style={{ textAlign: "center", padding: "10px 14px", background: "#fff", borderRadius: 10, border: "1px solid var(--border)", minWidth: 120 }}>
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      background: i === 0 ? "var(--accent)" : "var(--primary)",
-                      color: i === 0 ? "#1A1D2E" : "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      margin: "0 auto 6px"
-                    }}
-                  >
-                    {i + 1}
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{step}</div>
-                </div>
-                {i < 6 && <div style={{ color: "var(--text-muted)", fontSize: 18 }}>→</div>}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section className="section">
-        <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 44 }}>
-            <div className="section-label">Why SkillBridge</div>
-            <h2 className="section-title">Built for learners starting from scratch</h2>
-            <p className="section-sub" style={{ margin: "0 auto" }}>
-              We remove every barrier between a motivated learner and practical skills — tuition fees, language barriers, and lack of real project experience.
-            </p>
-          </div>
-          <div className="grid-3">
-            {[
-              { icon: "heart", title: "Completely Free", desc: "All 17 core courses are free forever. No payment walls, no subscriptions. Learn comfortably at your pace." },
-              { icon: "globe", title: "Tamil & English", desc: "Bilingual platform guidance and AI tutor in Tamil and English so language is never a stumbling block." },
-              { icon: "cert", title: "Verifiable Certificates", desc: "Earn digital certificates with unique serial numbers upon completing lessons and final assessments." },
-              { icon: "freelance", title: "Real Micro-Projects", desc: "Put skills to test on real gigs posted by clients. Build a portfolio and earn introductory stipends." },
-              { icon: "ai", title: "SkillMate AI Companion", desc: "Your personal 24/7 AI learning buddy to explain complex concepts simply, review code, and roadmap steps." },
-              { icon: "mentor", title: "Practitioner Mentorship", desc: "Get feedback and guidance from seasoned engineers, designers, and marketers who volunteer to mentor." },
-            ].map((f) => (
-              <div key={f.title} className="card" style={{ padding: 24 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--accent-light)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14, fontSize: 20 }}>
-                  <Icon name={f.icon} size={20} />
-                </div>
-                <h3 style={{ fontSize: 16, fontFamily: "Inter, sans-serif", fontWeight: 600, marginBottom: 8 }}>{f.title}</h3>
-                <p style={{ fontSize: 14, color: "var(--text-mid)", lineHeight: 1.7 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Courses */}
-      <section className="section" style={{ background: "var(--surface-alt)" }}>
-        <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <div className="section-label">Curated Curriculum</div>
-              <h2 className="section-title" style={{ marginBottom: 4 }}>17 Free Practical Courses</h2>
-              <p style={{ color: "var(--text-mid)", fontSize: 14 }}>From absolute computer literacy to modern web development and AI fundamentals.</p>
+            {/* Micro proof badges */}
+            <div style={{ display: "flex", gap: 20, marginTop: 32, flexWrap: "wrap", fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
+              <span>✓ 100% Online Filing</span>
+              <span>✓ 16-Digit Official URN</span>
+              <span>✓ ₹0 Collateral Loan Access</span>
+              <span>✓ Fast Small Project Delivery</span>
             </div>
-            <button className="sb-btn sb-btn-outline" onClick={() => setPage("courses")}>
-              View All 17 Courses →
-            </button>
           </div>
 
-          {/* Category Filter Chips */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-            {categories.map((c) => (
+          {/* Right Highlight Box */}
+          <div className="hide-mobile" style={{ width: 340 }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 16, padding: "26px 24px", color: "#fff" }}>
+              <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)", fontWeight: 700, marginBottom: 8 }}>
+                Quick Udyam Services
+              </div>
+              <h3 style={{ fontSize: 18, marginBottom: 14, fontWeight: 700, color: "#fff" }}>
+                What We Do For Your Business:
+              </h3>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", fontSize: 13, lineHeight: 1.9 }}>
+                <li>🏛️ <strong>New Udyam Registration</strong> for Shops & Startups</li>
+                <li>📜 <strong>Download & Verify</strong> 16-Digit Udyam URN</li>
+                <li>💻 <strong>Small Websites & Catalogs</strong> in 3–5 Days</li>
+                <li>📊 <strong>Excel Invoice & Stock Sheets</strong> in 48 Hours</li>
+                <li>🎨 <strong>Canva Banners & Posters</strong> for WhatsApp Promo</li>
+              </ul>
               <button
-                key={c}
-                onClick={() => setActiveCategory(c)}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: 20,
-                  border: `1.5px solid ${activeCategory === c ? "var(--primary)" : "var(--border)"}`,
-                  background: activeCategory === c ? "var(--primary)" : "#fff",
-                  color: activeCategory === c ? "#fff" : "var(--text-mid)",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.15s"
-                }}
+                className="sb-btn sb-btn-accent"
+                style={{ width: "100%", justifyContent: "center", fontWeight: 700 }}
+                onClick={() => setPage("udyam")}
               >
-                {c}
+                Start Udyam Filing Now →
               </button>
-            ))}
-          </div>
-
-          <div className="grid-3">
-            {filtered.map((course) => {
-              const isEnrolled = enrolledIds.includes(course.id) || course.progress > 0;
-              return (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  setPage={setPage}
-                  isEnrolled={isEnrolled}
-                  progress={course.progress}
-                />
-              );
-            })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Mission Banner */}
-      <section className="section">
+      {/* Section 1: Udyam Registration Spotlight */}
+      <section className="container section">
+        <div style={{ textAlign: "center", maxWidth: 660, margin: "0 auto 44px" }}>
+          <div className="section-label">Official MSME Certification</div>
+          <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.3rem)", color: "var(--text)", marginBottom: 12 }}>
+            Why Every Micro & Small Business Needs Udyam Registration
+          </h2>
+          <p style={{ color: "var(--text-mid)", fontSize: 15, lineHeight: 1.6 }}>
+            The Government of India provides immense financial, legal, and operational advantages to registered MSMEs.
+          </p>
+        </div>
+
+        <div className="grid-3" style={{ gap: 24 }}>
+          {[
+            {
+              icon: "🏦",
+              title: "Collateral-Free Bank Credit",
+              desc: "Apply for loans under the CGTMSE scheme where nationalized banks extend credit up to ₹2 Crore without demanding property or third-party guarantee."
+            },
+            {
+              icon: "🛡️",
+              title: "Delayed Payment Settlement",
+              desc: "Buyers must legally settle payments within 45 days. Defaults attract 3x compound interest under MSME Samadhaan legal tribunal protection."
+            },
+            {
+              icon: "🏛️",
+              title: "Govt Tender Fee Waivers",
+              desc: "Enjoy 100% waiver of Earnest Money Deposit (EMD) and security deposits when submitting bids for Central and State government tenders."
+            },
+            {
+              icon: "⚡",
+              title: "Electricity Bill Subsidies",
+              desc: "Avail power tariff discounts for commercial and industrial workshops, plus capital investment subsidies from State MSME directorates."
+            },
+            {
+              icon: "🏷️",
+              title: "50% Trademark & Patent Discount",
+              desc: "Get 50% government concession on trademark registrations, patent fees, and official bar-code subsidies for retail products."
+            },
+            {
+              icon: "📉",
+              title: "Lower Overdraft Interest Rates",
+              desc: "Save 1% to 1.5% interest on bank overdrafts and cash credit accounts across all major public sector banks."
+            }
+          ].map((item) => (
+            <div key={item.title} className="card" style={{ padding: 26 }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{item.title}</h3>
+              <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6 }}>{item.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 36 }}>
+          <button className="sb-btn sb-btn-primary sb-btn-lg" onClick={() => setPage("udyam")}>
+            Apply for Udyam Registration (Free Guidance) →
+          </button>
+        </div>
+      </section>
+
+      {/* Section 2: Small Level Projects Will Be Done */}
+      <section style={{ background: "var(--surface-alt)", padding: "64px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
         <div className="container">
-          <div
-            style={{
-              background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)",
-              borderRadius: 20,
-              padding: "54px 44px",
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 40,
-              alignItems: "center"
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 36 }}>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)", marginBottom: 12 }}>
-                OUR SOCIAL MISSION
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(45, 74, 138, 0.1)", padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 8 }}>
+                <span>⚡ AFFORDABLE & RAPID EXECUTION</span>
               </div>
-              <h2 style={{ color: "#fff", fontSize: "clamp(1.5rem, 3vw, 2.2rem)", marginBottom: 16, lineHeight: 1.25 }}>
-                Opportunity should never be limited by income or geography
+              <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.3rem)", color: "var(--text)", marginBottom: 6 }}>
+                Small-Level Projects Will Be Done For You
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 15, lineHeight: 1.8 }}>
-                SkillBridge exists to bridge the gap between academic theory and real-world employment. We empower ambitious youth with practical tech & creative capabilities, honest credentialing, and direct pathways into the digital economy.
+              <p style={{ color: "var(--text-mid)", fontSize: 15, maxWidth: 640 }}>
+                Don't overpay SaaS agencies. We execute small-level digital tasks, shop websites, Excel sheets, and marketing assets at reasonable rates with rapid turnaround.
               </p>
             </div>
-            <div style={{ display: "grid", gap: 14 }}>
-              {[
-                "100% Free course access for all registered learners",
-                "SkillMate AI Assistant available in Tamil and English",
-                "Guaranteed beginner-friendly micro-project marketplace",
-                "Verifiable organization-level certificates on merit"
-              ].map((item) => (
-                <div key={item} style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "12px 16px" }}>
-                  <div style={{ color: "var(--accent)", fontWeight: 700, fontSize: 16 }}>✓</div>
-                  <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>{item}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Open Freelance Projects Preview */}
-      <section className="section" style={{ background: "var(--surface-alt)" }}>
-        <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 30, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <div className="section-label">Micro-Gigs Marketplace</div>
-              <h2 className="section-title" style={{ marginBottom: 4 }}>Featured Beginner Projects</h2>
-              <p style={{ color: "var(--text-mid)", fontSize: 14 }}>Real clients posting small jobs. Practice your skills and earn your first stipend.</p>
-            </div>
-            <button className="sb-btn sb-btn-outline" onClick={() => setPage("projects")}>
-              Browse All Projects →
+            <button className="sb-btn sb-btn-accent" onClick={() => setPage("projects")}>
+              🚀 Ask Us to Build Your Project
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
-            {INITIAL_PROJECTS.slice(0, 3).map((p) => (
-              <div key={p.id} className="card" style={{ padding: 22, display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)", background: "var(--surface-alt)", padding: "3px 8px", borderRadius: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 22 }}>
+            {smallProjects.map((p) => (
+              <div key={p.id} className="card" style={{ padding: 24, display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontSize: 28 }}>{p.icon}</span>
+                  <span style={{ fontSize: 11, background: "var(--surface-alt)", padding: "3px 8px", borderRadius: 4, fontWeight: 600, color: "var(--text-muted)" }}>
                     {p.category}
                   </span>
-                  <span style={{ fontSize: 12, color: "var(--success)", background: "var(--success-light)", padding: "3px 8px", borderRadius: 4, fontWeight: 600 }}>
-                    {p.status}
-                  </span>
                 </div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{p.title}</h3>
-                <p style={{ fontSize: 13, color: "var(--text-mid)", marginBottom: 14, lineHeight: 1.6, flex: 1 }}>{p.description}</p>
-                <div style={{ display: "flex", gap: 14, fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
-                  <span>💰 {p.budget}</span>
-                  <span>⏱ {p.deadline}</span>
-                  <Badge type="beginner">{p.level}</Badge>
+
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>
+                  {p.title}
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6, marginBottom: 16, flex: 1 }}>
+                  {p.desc}
+                </p>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid var(--border)", fontSize: 12 }}>
+                  <div>
+                    <span style={{ color: "var(--text-muted)" }}>Budget: </span>
+                    <strong style={{ color: "var(--accent-dark, #A16A00)" }}>{p.budget}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--text-muted)" }}>Delivery: </span>
+                    <strong style={{ color: "var(--primary)" }}>{p.timeline}</strong>
+                  </div>
                 </div>
+
                 <button
-                  className="sb-btn sb-btn-primary sb-btn-sm"
-                  style={{ width: "100%", justifyContent: "center" }}
+                  className="sb-btn sb-btn-outline"
+                  style={{ width: "100%", marginTop: 14, fontSize: 13, justifyContent: "center" }}
                   onClick={() => setPage("projects")}
                 >
-                  View Details & Apply
+                  Request This Project →
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Mentors */}
-      <section className="section">
-        <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div className="section-label">Community Support</div>
-            <h2 className="section-title">Learn from Real Practitioners</h2>
-            <p className="section-sub" style={{ margin: "0 auto" }}>Engineers, data analysts, and marketers giving back to the community.</p>
-          </div>
-          <div className="grid-3">
-            {MENTORS.map((m) => (
-              <div key={m.name} className="card" style={{ padding: 28, textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <Avatar initials={m.avatar} size={64} />
-                </div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>{m.name}</h3>
-                <div style={{ fontSize: 13, color: "var(--primary)", fontWeight: 500, marginBottom: 6 }}>{m.role}</div>
-                <p style={{ fontSize: 13, color: "var(--text-mid)", marginBottom: 14, lineHeight: 1.6 }}>{m.bio}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
-                  {m.expertise.map((e) => (
-                    <Tag key={e}>{e}</Tag>
-                  ))}
-                </div>
+          {/* Banner: Custom small tasks */}
+          <div
+            style={{
+              background: "#fff",
+              border: "1.5px solid var(--accent)",
+              borderRadius: 14,
+              padding: "24px 28px",
+              marginTop: 32,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text)", marginBottom: 4 }}>
+                Have a unique small-level task not listed above?
               </div>
-            ))}
+              <div style={{ fontSize: 13, color: "var(--text-mid)" }}>
+                Tell us your requirements — our team will evaluate and give you a prompt quote within hours.
+              </div>
+            </div>
+            <button className="sb-btn sb-btn-accent" onClick={() => setPage("projects")}>
+              Tell Us What to Build
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Final Call to Action */}
-      <section className="section-sm" style={{ background: "var(--surface-alt)", borderTop: "1px solid var(--border)" }}>
-        <div className="container" style={{ textAlign: "center" }}>
-          <h2 className="section-title" style={{ marginBottom: 10 }}>Ready to begin your journey?</h2>
-          <p className="section-sub" style={{ margin: "0 auto 26px" }}>
-            Join hundreds of motivated students. Access all courses and the SkillMate AI assistant for free today.
+      {/* Section 3: Simple 3-Step Process */}
+      <section className="container section">
+        <div style={{ textAlign: "center", maxWidth: 600, margin: "0 auto 40px" }}>
+          <div className="section-label">Seamless & Transparent</div>
+          <h2 style={{ fontSize: "2rem", color: "var(--text)" }}>How It Works</h2>
+        </div>
+
+        <div className="grid-3" style={{ gap: 28 }}>
+          {[
+            {
+              step: "01",
+              title: "Submit Online",
+              desc: "Fill in your Aadhaar & business details for Udyam Registration, or describe your small-level project requirements."
+            },
+            {
+              step: "02",
+              title: "Verification & Assignment",
+              desc: "Our admin team verifies your data against official MSME registries or allocates a dedicated developer & mentor."
+            },
+            {
+              step: "03",
+              title: "Certificate or Delivery",
+              desc: "Receive your official 16-digit Udyam Registration Certificate in your email, or review your completed project."
+            }
+          ].map((s) => (
+            <div key={s.step} style={{ textAlign: "center", padding: "20px 16px" }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "var(--accent-light)",
+                  color: "#7A5500",
+                  fontWeight: 800,
+                  fontSize: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px",
+                  border: "2px solid var(--accent)"
+                }}
+              >
+                {s.step}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{s.title}</h3>
+              <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6 }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 4: Final CTA */}
+      <section style={{ background: "var(--primary-dark)", padding: "64px 0", color: "#fff", textAlign: "center" }}>
+        <div className="container" style={{ maxWidth: 640 }}>
+          <h2 style={{ color: "#fff", fontSize: "2.2rem", marginBottom: 14 }}>
+            Empower Your Business Today
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
+            Get your government Udyam MSME certificate and have your small-level digital tasks done with professional care.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <button className="sb-btn sb-btn-primary sb-btn-lg" onClick={() => setPage("register")}>
-              Create Free Account
+            <button className="sb-btn sb-btn-accent sb-btn-lg" onClick={() => setPage("udyam")}>
+              Apply for Udyam Registration
             </button>
-            <button className="sb-btn sb-btn-ghost sb-btn-lg" onClick={() => setPage("ai")}>
-              Chat with SkillMate AI
+            <button
+              className="sb-btn sb-btn-lg"
+              style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.3)" }}
+              onClick={() => setPage("projects")}
+            >
+              Request a Small Project
             </button>
           </div>
         </div>

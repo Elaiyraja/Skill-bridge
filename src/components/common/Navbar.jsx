@@ -4,11 +4,10 @@ import { isFirebaseConfigured } from '../../firebase/config';
 
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
-  { key: "courses", label: "Courses" },
-  { key: "projects", label: "Freelance Projects" },
-  { key: "about", label: "About" },
-  { key: "stories", label: "Success Stories" },
-  { key: "verify", label: "Verify Certificate" },
+  { key: "udyam", label: "Udyam Registration" },
+  { key: "projects", label: "Small Projects" },
+  { key: "about", label: "About MSME" },
+  { key: "contact", label: "Contact Us" },
   { key: "ai", label: "SkillMate AI" },
 ];
 
@@ -42,7 +41,7 @@ export const Navbar = ({ page, setPage, user, onSignOut }) => {
           </div>
           <div>
             <div style={{ fontFamily: "Lora, serif", fontWeight: 700, fontSize: 18, color: "var(--text)", lineHeight: 1.1 }}>SkillBridge</div>
-            <div style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.02em" }}>Free Learning & Work</div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.02em" }}>Udyam & Small Projects</div>
           </div>
         </div>
 
